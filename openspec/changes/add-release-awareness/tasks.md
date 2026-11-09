@@ -5,5 +5,5 @@
 - [x] Show an update indicator and provide manual checks and release-page navigation.
 - [x] Document the correct Talia source checkout and manual update path.
 - [x] Add release comparison tests and run typecheck.
-- [ ] Publish and verify a release that includes the integration.
+- [x] Publish and verify source release `v2026.11.9` on `davoxpa/Orkas`; GitHub's latest-release API returns that tag.
 - [ ] Verify a second computer updates and discovers its installed `agy` runtime.
