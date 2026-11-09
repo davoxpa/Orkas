@@ -61,7 +61,7 @@ import {
 import { resolveContainedProtocolFile } from './util/protocol-path';
 
 const APP_USER_MODEL_ID = 'com.orkas.desktop';
-const APP_DISPLAY_NAME = 'Orkas';
+const APP_DISPLAY_NAME = 'Talia';
 const E2E_USER_DATA_DIR = !app.isPackaged
   ? String(process.env.ORKAS_E2E_USER_DATA_DIR || '').trim()
   : '';
@@ -82,7 +82,7 @@ const MARKETPLACE_DEFAULTS_RETRY_DELAYS_MS = [3_000, 3_000, 3_000] as const;
 // Source and packaged builds share one app identity and one server
 // environment: global prod. This keeps local data paths and OS app grouping
 // stable across run modes.
-app.setName('Orkas');
+app.setName(APP_DISPLAY_NAME);
 try {
   if (IS_PACKAGED_LAUNCH_SMOKE) {
     app.setPath('userData', path.join(path.dirname(PACKAGED_LAUNCH_SMOKE_FILE), 'user-data'));
@@ -90,6 +90,9 @@ try {
     // Keep unpackaged E2E state and its single-instance lock away from the
     // developer's normal Orkas profile. Packaged launches ignore this hook.
     app.setPath('userData', path.resolve(E2E_USER_DATA_DIR));
+  } else {
+    // Il nuovo nome non deve scollegare cookie, sessioni e permessi del profilo esistente.
+    app.setPath('userData', path.join(app.getPath('appData'), 'Orkas'));
   }
 } catch {
   /* userData may be unavailable in unusual test hosts; the default is fine. */
@@ -186,6 +189,9 @@ installSseHeaderTimeoutPatch();
 // Install the stable router before diagnostics wrap fetch. Explicit launch
 // proxy settings apply now; Electron system routes become available at ready.
 import { installEnvProxyDispatcher, installSystemProxyDispatcher } from './util/proxy-dispatcher';
+import { initializeNetworkSettings } from './features/network_settings';
+import { browserProxyConfig } from './util/browser-proxy';
+const networkSettingsAtBoot = initializeNetworkSettings();
 void installEnvProxyDispatcher();
 
 // Provider-fetch diagnostics preserve the router installed above.
@@ -405,7 +411,7 @@ function showMainWindow(): BrowserWindow {
 
 function createAppTray(): void {
   const iconPath = path.join(paths.SRC_ROOT, 'resources', 'icons',
-    process.platform === 'darwin' ? 'whaleTemplate.png' : 'icon.ico');
+    process.platform === 'darwin' ? 'taliaTemplate.png' : 'icon.ico');
   appTray = createOptionalTray({
     platform: process.platform,
     iconPath,
@@ -1594,6 +1600,10 @@ if (!gotLock) {
   // this connector-only receiver outside the removed account protocol module.
   registerConnectorProtocol();
   app.whenReady().then(async () => {
+    const networkProxyConfig = browserProxyConfig(process.env).config;
+    if (networkSettingsAtBoot.mode !== 'automatic' && networkProxyConfig) {
+      await session.defaultSession.setProxy(networkProxyConfig);
+    }
     await runBootSelfCheck();
     await installSystemProxyDispatcher();
     // Publish packaged, local-only content before the first window so the

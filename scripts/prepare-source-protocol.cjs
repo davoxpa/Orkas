@@ -13,12 +13,16 @@ const { spawnSync } = require('node:child_process');
 if (process.platform !== 'darwin') process.exit(0);
 
 const root = path.resolve(__dirname, '..');
-const appBundle = path.join(root, 'node_modules', 'electron', 'dist', 'Orkas.app');
+const electronRoot = path.join(root, 'node_modules', 'electron');
+const executablePathFile = path.join(electronRoot, 'path.txt');
+if (!fs.existsSync(executablePathFile)) process.exit(0);
+const executable = path.join(electronRoot, 'dist', fs.readFileSync(executablePathFile, 'utf8').trim());
+const appBundle = path.resolve(executable, '../../..');
 const plist = path.join(appBundle, 'Contents', 'Info.plist');
 const lsregister = '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister';
 const desired = {
   bundleId: 'com.orkas.desktop',
-  name: 'Orkas',
+  name: 'Talia',
   scheme: 'orkas',
 };
 
@@ -35,13 +39,18 @@ function replaceString(key, value) {
 }
 
 const currentScheme = read('CFBundleURLTypes.0.CFBundleURLSchemes.0');
-const needsPatch = read('CFBundleIdentifier') !== desired.bundleId
+const sourceIcon = path.join(root, 'src', 'resources', 'icons', 'icon.icns');
+const iconName = read('CFBundleIconFile') || 'electron.icns';
+const targetIcon = path.join(appBundle, 'Contents', 'Resources', iconName.endsWith('.icns') ? iconName : `${iconName}.icns`);
+const iconChanged = !fs.existsSync(targetIcon) || !fs.readFileSync(sourceIcon).equals(fs.readFileSync(targetIcon));
+const needsPatch = iconChanged || read('CFBundleIdentifier') !== desired.bundleId
   || read('CFBundleName') !== desired.name
   || read('CFBundleDisplayName') !== desired.name
   || currentScheme !== desired.scheme;
 
 try {
   if (needsPatch) {
+    if (iconChanged) fs.copyFileSync(sourceIcon, targetIcon);
     replaceString('CFBundleIdentifier', desired.bundleId);
     replaceString('CFBundleName', desired.name);
     replaceString('CFBundleDisplayName', desired.name);
@@ -62,7 +71,7 @@ try {
     }
   }
   if (fs.existsSync(lsregister)) spawnSync(lsregister, ['-f', appBundle], { stdio: 'ignore' });
-  console.log(`[Orkas] connector callback protocol ready (${desired.scheme}://)`);
+  console.log(`[Talia] app identity and connector callback ready (${desired.scheme}://)`);
 } catch (err) {
-  console.warn(`[Orkas] connector callback protocol setup skipped: ${err && err.message || err}`);
+  console.warn(`[Talia] connector callback protocol setup skipped: ${err && err.message || err}`);
 }

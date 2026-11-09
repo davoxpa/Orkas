@@ -114,6 +114,7 @@ async function loadSettings() {
   _settingsRenderLocalExec();
   _settingsSyncLanguageRadio();
   await Promise.all([
+    _settingsSafeCall('network settings refresh', _settingsRefreshNetwork),
     _settingsSafeCall('custom validation refresh', _settingsRefreshOperatorPolicy),
     _settingsSafeCall('settings providers refresh', _settingsRefreshProviders),
     _settingsSafeCall('settings entries refresh', _settingsRefreshEntries),
@@ -146,6 +147,104 @@ async function loadSettings() {
   // which only fires on state changes — for a Free user with no transitions the
   // listener never fires after boot, leaving the button bound to whatever its
   // first render captured).
+}
+
+// Impostazioni di rete locali: nessuna modifica alle connessioni già in uso.
+const _networkSettingsBound = new WeakSet();
+let _networkSettingsEpoch = 0;
+
+function _settingsNetworkValues() {
+  return {
+    mode: document.getElementById('settings-network-mode').value,
+    httpProxy: document.getElementById('settings-network-http').value,
+    httpsProxy: document.getElementById('settings-network-https').value,
+    noProxy: document.getElementById('settings-network-bypass').value,
+  };
+}
+
+function _settingsNetworkMode() {
+  const manual = document.getElementById('settings-network-mode').value === 'manual';
+  document.getElementById('settings-network-manual').hidden = !manual;
+}
+
+function _settingsNetworkMessage(code, values = {}) {
+  const result = document.getElementById('settings-network-result');
+  result.textContent = t(`settings.network.result.${code}`, values);
+  result.className = code.startsWith('E_') ? 'form-msg err' : 'form-msg';
+}
+
+function _settingsNetworkWrite(settings) {
+  document.getElementById('settings-network-mode').value = settings.mode;
+  document.getElementById('settings-network-http').value = settings.httpProxy;
+  document.getElementById('settings-network-https').value = settings.httpsProxy;
+  document.getElementById('settings-network-bypass').value = settings.noProxy;
+  _settingsNetworkMode();
+}
+
+async function _settingsNetworkAction(kind) {
+  const root = document.getElementById('settings-network');
+  if (root.dataset.busy === 'true') return;
+  const epoch = ++_networkSettingsEpoch;
+  const payload = { settings: _settingsNetworkValues() };
+  if (kind === 'test') payload.target = document.getElementById('settings-network-target').value;
+  const controls = Array.from(root.querySelectorAll('input, select, button'));
+  root.dataset.busy = 'true';
+  controls.forEach(control => { control.disabled = true; });
+  _settingsNetworkMessage(kind === 'test' ? 'TESTING' : 'SAVING');
+  try {
+    const res = await window.orkas.invoke(kind === 'test' ? 'network.testConnection' : 'network.saveSettings', payload);
+    if (epoch !== _networkSettingsEpoch) return;
+    if (!res?.ok) { _settingsNetworkMessage(_settingsNetworkErrorCode(res?.code)); return; }
+    if (kind === 'save') {
+      _settingsNetworkWrite(res.settings);
+      document.getElementById('settings-network-restart').hidden = !res.restartRequired;
+      _settingsNetworkMessage('SAVED');
+    } else {
+      const result = res.result || {};
+      const code = result.code === 'NETWORK_REACHABLE' ? result.code : _settingsNetworkErrorCode(result.code);
+      _settingsNetworkMessage(code, {
+        status: Number.isFinite(result.status) ? result.status : '—',
+        duration: Number.isFinite(result.durationMs) ? result.durationMs : '—',
+      });
+    }
+  } catch (_) {
+    if (epoch === _networkSettingsEpoch) _settingsNetworkMessage('E_NETWORK_OPERATION');
+  } finally {
+    root.dataset.busy = 'false';
+    controls.forEach(control => { control.disabled = false; });
+  }
+}
+
+function _settingsNetworkErrorCode(code) {
+  return [
+    'E_NETWORK_INPUT', 'E_NETWORK_PROXY_URL', 'E_NETWORK_BYPASS', 'E_NETWORK_PROXY_REQUIRED',
+    'E_NETWORK_CONFIG', 'E_NETWORK_OPERATION', 'E_NETWORK_BUSY', 'E_NETWORK_TARGET',
+    'E_NETWORK_PROXY_AUTH', 'E_NETWORK_TIMEOUT', 'E_NETWORK_TLS', 'E_NETWORK_DNS',
+    'E_NETWORK_REFUSED', 'E_NETWORK_CONNECTION', 'E_NETWORK_AUTH_REQUIRED',
+    'E_NETWORK_ACCESS_DENIED', 'E_NETWORK_HTTP',
+  ].includes(code) ? code : 'E_NETWORK_OPERATION';
+}
+
+async function _settingsRefreshNetwork() {
+  const root = document.getElementById('settings-network');
+  if (!root || root.dataset.busy === 'true') return;
+  if (!_networkSettingsBound.has(root)) {
+    document.getElementById('settings-network-mode').addEventListener('change', _settingsNetworkMode);
+    document.getElementById('settings-network-save').addEventListener('click', () => { void _settingsNetworkAction('save'); });
+    document.getElementById('settings-network-test').addEventListener('click', () => { void _settingsNetworkAction('test'); });
+    root.addEventListener('input', () => { ++_networkSettingsEpoch; document.getElementById('settings-network-result').textContent = ''; });
+    _networkSettingsBound.add(root);
+  }
+  const epoch = ++_networkSettingsEpoch;
+  try {
+    const res = await window.orkas.invoke('network.getSettings', {});
+    if (epoch !== _networkSettingsEpoch) return;
+    if (!res?.ok) { _settingsNetworkMessage(_settingsNetworkErrorCode(res?.code)); return; }
+    _settingsNetworkWrite(res.settings);
+    document.getElementById('settings-network-restart').hidden = !res.restartRequired;
+  } catch (_) {
+    if (epoch === _networkSettingsEpoch) _settingsNetworkMessage('E_NETWORK_OPERATION');
+  }
 }
 
 // ── Native task notifications ──

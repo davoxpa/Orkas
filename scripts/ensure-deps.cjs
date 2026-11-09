@@ -655,77 +655,45 @@ function ensureElectronReady(reason = 'missing binary') {
   process.exit(1);
 }
 
-// macOS dev 模式下 Dock tooltip + Cmd-Tab + 菜单栏左上角的应用名，全部
-// 来自 `Electron.app/Contents/Info.plist` 的 CFBundleName / CFBundleDisplayName。
-// `app.setName()` 只改菜单栏第一项，**改不了 Dock**。
-//
-// 单独改 plist 不够：macOS Launch Services 对 bundle identifier
-// `com.github.Electron` 有持久缓存，即使 `lsregister -f` 也常常拒绝刷新。
-// 唯一可靠方案是把 .app 目录本身重命名（让 macOS 当成新 app 重新登记），
-// 同时同步更新 `electron/path.txt`（npm electron launcher 就是靠它定位
-// 二进制的）。重命名 + 改 plist + ad-hoc 重签 + lsregister + killall Dock
-// 一套打下来才算数。
-//
-// 幂等：node_modules/electron/dist/Orkas.app 已存在就跳过。npm install
-// 会重新落地 Electron.app（覆盖 Orkas.app 的话也无所谓，下次启动重新走
-// 这套流程）。
+// Il bundle locale deve avere nome, icona e firma coerenti anche nel Dock.
+// La directory del profilo e lo schema OAuth restano quelli esistenti.
 function patchElectronAppName() {
   if (process.platform !== 'darwin') return;
   const distDir = path.join(NODE_MODULES, 'electron', 'dist');
-  const oldApp = path.join(distDir, 'Electron.app');
-  const newApp = path.join(distDir, 'Orkas.app');
+  const newApp = path.join(distDir, 'Talia.app');
   const pathTxt = path.join(NODE_MODULES, 'electron', 'path.txt');
   if (!fs.existsSync(distDir)) return;
-
-  // 已经 patched 过：直接返回。检查 Orkas.app 存在 + path.txt 已更新。
-  if (fs.existsSync(newApp) && !fs.existsSync(oldApp)) {
-    let pathTxtContent = '';
-    try { pathTxtContent = fs.readFileSync(pathTxt, 'utf8').trim(); } catch { /* */ }
-    if (pathTxtContent.startsWith('Orkas.app/')) return;
-  }
-
-  // 重命名 Electron.app → Orkas.app（如果两者都在，先把旧的删掉避免混淆）。
-  if (fs.existsSync(oldApp)) {
-    if (fs.existsSync(newApp)) fs.rmSync(newApp, { recursive: true, force: true });
-    try { fs.renameSync(oldApp, newApp); }
-    catch (err) {
-      console.warn('[Orkas] 重命名 Electron.app 失败（' + err.message + '）：可能有进程仍在占用，跳过此次 patch');
+  // Riutilizzare anche il bundle già preparato col nome precedente.
+  const sourceApp = ['Orkas.app', 'Electron.app'].map(name => path.join(distDir, name))
+    .find(candidate => fs.existsSync(candidate));
+  let currentPath = '';
+  try { currentPath = fs.readFileSync(pathTxt, 'utf8').trim(); } catch { /* Prima preparazione. */ }
+  if (fs.existsSync(newApp) && currentPath.startsWith('Talia.app/')) return;
+  if (!fs.existsSync(newApp)) {
+    if (!sourceApp) return;
+    try { fs.renameSync(sourceApp, newApp); }
+    catch (error) {
+      console.warn('[Talia] Impossibile preparare il bundle:', error.message);
       return;
     }
-  } else if (!fs.existsSync(newApp)) {
-    return; // 既没有旧也没有新，电子组件可能损坏，留给上层 npm install 处理
   }
-
-  // 改 plist 三键。
   const plistPath = path.join(newApp, 'Contents', 'Info.plist');
-  for (const [key, val] of [
-    ['CFBundleName', 'Orkas'],
-    ['CFBundleDisplayName', 'Orkas'],
-  ]) {
-    const r = spawnSync('plutil', ['-replace', key, '-string', val, plistPath], { stdio: 'pipe' });
-    if (r.status !== 0) {
-      console.warn('[Orkas] plutil -replace ' + key + ' 失败：', (r.stderr || '').toString().trim());
-    }
+  for (const key of ['CFBundleName', 'CFBundleDisplayName']) {
+    const result = spawnSync('plutil', ['-replace', key, '-string', 'Talia', plistPath], { stdio: 'pipe' });
+    if (result.status !== 0) throw new Error(`Impossibile aggiornare ${key}: ${String(result.stderr || '').trim()}`);
   }
-
-  // 改完 plist 后旧签名失效，必须 ad-hoc 重签。
-  const cs = spawnSync('codesign', ['--force', '--deep', '--sign', '-', newApp], { stdio: 'pipe' });
-  if (cs.status !== 0) {
-    console.warn('[Orkas] Orkas.app ad-hoc 重签失败（手动修复：codesign --force --deep --sign - "' + newApp + '"）：', (cs.stderr || '').toString().trim());
-  }
-
-  // electron npm launcher 通过 path.txt 定位二进制；指向新名字。
-  try { fs.writeFileSync(pathTxt, 'Orkas.app/Contents/MacOS/Electron'); }
-  catch (err) {
-    console.warn('[Orkas] 更新 electron/path.txt 失败（' + err.message + '）：electron CLI 可能找不到二进制');
-  }
-
-  // Launch Services：注销旧路径 + 注册新路径。重启 Dock 丢掉运行实例缓存。
+  const iconPath = path.join(PC_DIR, 'src', 'resources', 'icons', 'icon.icns');
+  const iconKey = spawnSync('plutil', ['-extract', 'CFBundleIconFile', 'raw', '-o', '-', plistPath], { encoding: 'utf8' });
+  const iconName = String(iconKey.stdout || '').trim() || 'electron.icns';
+  const iconFile = iconName.endsWith('.icns') ? iconName : `${iconName}.icns`;
+  fs.copyFileSync(iconPath, path.join(newApp, 'Contents', 'Resources', iconFile));
+  const signed = spawnSync('codesign', ['--force', '--deep', '--sign', '-', newApp], { stdio: 'pipe' });
+  if (signed.status !== 0) throw new Error(`Firma locale Talia non riuscita: ${String(signed.stderr || '').trim()}`);
+  fs.writeFileSync(pathTxt, 'Talia.app/Contents/MacOS/Electron');
   const lsregister = '/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister';
-  spawnSync(lsregister, ['-u', oldApp], { stdio: 'pipe' });
+  if (sourceApp) spawnSync(lsregister, ['-u', sourceApp], { stdio: 'pipe' });
   spawnSync(lsregister, ['-f', newApp], { stdio: 'pipe' });
-  spawnSync('killall', ['Dock'], { stdio: 'pipe' });
-  console.log('[Orkas] Dock 名称已改为 Orkas（重命名 Electron.app → Orkas.app；下次启动生效）');
+  console.log('[Talia] Nome e icona del bundle aggiornati.');
 }
 
 function main() {
@@ -835,6 +803,7 @@ if (require.main === module) runMainWithDependencyLock();
 
 module.exports = {
   acquireDependencyLock,
+  patchElectronAppName,
   depFingerprint,
   dependencyInstallReason,
   electronDependencyState,

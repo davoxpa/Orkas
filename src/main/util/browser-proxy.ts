@@ -7,7 +7,7 @@ const log = createLogger('browser-proxy');
 type Credentials = { username: string; password: string };
 
 export interface BrowserProxyDiagnostic {
-  browser_proxy_policy: 'system' | 'fixed_servers' | 'invalid';
+  browser_proxy_policy: 'system' | 'fixed_servers' | 'direct' | 'invalid';
   browser_proxy_setup: 'ready' | 'pending' | 'failed';
 }
 
@@ -18,7 +18,10 @@ export function browserProxyConfig(env: NodeJS.ProcessEnv): {
 } {
   const policy = envProxyConfig(env);
   const credentials = new Map<string, Credentials>();
-  if (!policy.httpProxy && !policy.httpsProxy) return { credentials };
+  if (!policy.httpProxy && !policy.httpsProxy) return {
+    credentials,
+    ...(env.ORKAS_NO_AUTO_PROXY === '1' ? { config: { mode: 'direct' as const } } : {}),
+  };
   const endpoint = (raw: string | undefined): string => {
     if (!raw) return 'direct://'; // An explicit HTTPS-only policy leaves HTTP direct.
     const url = new URL(raw);
@@ -109,7 +112,7 @@ export function prepareBrowserProxy(ses: Pick<Session, 'setProxy'>, env: NodeJS.
       ready,
       // Policy/setup observations only; system/PAC and bypass resolution are
       // deliberately not inferred and this performs no network lookup.
-      diagnostic: () => ({ browser_proxy_policy: 'fixed_servers', browser_proxy_setup: setup }),
+      diagnostic: () => ({ browser_proxy_policy: config.mode === 'direct' ? 'direct' : 'fixed_servers', browser_proxy_setup: setup }),
       attach(contents) {
         if (!credentials.size) return;
         contents.on('login', (event, details, auth, callback) => {

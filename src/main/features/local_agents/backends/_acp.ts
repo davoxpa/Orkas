@@ -36,6 +36,8 @@ export interface AcpBackendDef {
   argv: string[] | ((opts: BackendRunOptions) => string[]);
   /** Identifier we report via `clientInfo.name`. Cosmetic. */
   clientName: string;
+  /** Versione richiesta dagli adattatori che dichiarano un contratto ACP esplicito. */
+  requiredProtocolVersion?: number;
   /** Use the stabilized `session/resume` lifecycle when the runner supplies a
    * native session id. Backends that omit this continue with fresh sessions. */
   resume?: boolean;
@@ -327,6 +329,14 @@ export function makeAcpBackend(def: AcpBackendDef): LocalBackend {
                 result: { outcome: { outcome: 'cancelled' } },
               });
             }).finally(() => diagnostics.permissionEnded());
+            return;
+          }
+          if (Number(env.id) === 1 && (env.error || (def.requiredProtocolVersion !== undefined
+            && env.result?.protocolVersion !== def.requiredProtocolVersion))) {
+            resultStatus = 'failed';
+            resultError = typeof env.error?.message === 'string'
+              ? env.error.message : 'Unsupported ACP protocol version';
+            finishProtocol();
             return;
           }
           if (Number(env.id) === 1 && !env.error) {

@@ -29,6 +29,8 @@ const _BOOT_STAGE_WARN_MS = 1500;
 const _BOOT_TOTAL_WARN_MS = 3000;
 const _SIDEBAR_NAV_BOOT_WARM_MS = 3500;
 let _sidebarVersionBaseLabel = '';
+let _sidebarReleaseUpdate = null;
+let _sidebarReleaseChecking = false;
 let _sidebarNavWarmUntil = 0;
 let _bootUserNavigated = false;
 let _bootRestoreComplete = false;
@@ -150,6 +152,7 @@ async function bootApp() {
 
     // Deferred warmup does not block the first interactive frame.
     setTimeout(() => {
+      _checkSidebarReleaseUpdate(false);
       try { refreshModelGuard(); } catch (_) { /* non-fatal */ }
       if (typeof startAutoEventsSubscription === 'function') {
         startAutoEventsSubscription();
@@ -197,14 +200,52 @@ function _setRendererVersionLabel(version) {
 function _renderSidebarVersionUpdate() {
   const el = document.getElementById('sidebar-version');
   if (!el) return;
-  el.textContent = _sidebarVersionBaseLabel || '';
-  el.title = _sidebarVersionBaseLabel ? t('sidebar.version_title', { version: _sidebarVersionBaseLabel }) : '';
+  const update = _sidebarReleaseUpdate;
+  el.textContent = update?.available ? `${_formatRendererVersionLabel(update.latest)} ↑` : (_sidebarVersionBaseLabel || '');
+  el.title = update?.available
+    ? t('sidebar.update_available', { version: update.latest })
+    : _sidebarVersionBaseLabel ? t('sidebar.update_check_title', { version: _sidebarVersionBaseLabel }) : '';
   el.setAttribute('aria-label', el.title || el.textContent || 'Version');
-  el.disabled = true;
-  el.classList.remove('is-actionable', 'is-progress');
+  el.disabled = !_sidebarVersionBaseLabel || _sidebarReleaseChecking;
+  el.classList.toggle('is-actionable', !!_sidebarVersionBaseLabel && !_sidebarReleaseChecking);
+  el.classList.toggle('is-progress', _sidebarReleaseChecking);
 }
 
-function _bindSidebarVersionUpdate() {}
+async function _checkSidebarReleaseUpdate(showResult) {
+  if (_sidebarReleaseChecking || !window.orkas?.invoke) return;
+  _sidebarReleaseChecking = true;
+  _renderSidebarVersionUpdate();
+  try {
+    const result = await window.orkas.invoke('releaseUpdates.check');
+    _sidebarReleaseUpdate = result?.ok ? result : null;
+    if (showResult) {
+      const status = result?.status || 'unavailable';
+      const key = status === 'available' ? 'sidebar.update_available'
+        : status === 'current' ? 'sidebar.update_current'
+        : status === 'no_release' ? 'sidebar.update_no_release'
+        : 'sidebar.update_error';
+      window.alert(t(key, { version: result?.latest || _sidebarVersionBaseLabel }));
+    }
+  } catch (_) {
+    if (showResult) window.alert(t('sidebar.update_error'));
+  } finally {
+    _sidebarReleaseChecking = false;
+    _renderSidebarVersionUpdate();
+  }
+}
+
+function _bindSidebarVersionUpdate() {
+  const el = document.getElementById('sidebar-version');
+  if (!el || el.dataset.updateBound === 'true') return;
+  el.dataset.updateBound = 'true';
+  el.addEventListener('click', async () => {
+    if (_sidebarReleaseUpdate?.available) {
+      await window.orkas.invoke('releaseUpdates.open');
+      return;
+    }
+    await _checkSidebarReleaseUpdate(true);
+  });
+}
 
 // One-shot rename of legacy brand-prefixed localStorage keys
 // (`orkas_*` / `orkas.*`). Rationale lives in

@@ -62,6 +62,7 @@ import { getDesktopWindowController } from '../features/desktop_windows';
 import { getLoginStartup } from '../features/login_startup';
 import * as notificationPermissions from '../features/notification_permissions';
 import * as appConfig from '../features/config';
+import { checkReleaseUpdate, openReleasePage } from '../features/release_updates';
 import * as taskUnreadTray from '../features/task_unread_tray';
 import * as avatars from '../features/avatars';
 import * as commanderProfile from '../features/commander_profile';
@@ -75,6 +76,7 @@ import {
 import { officeFileToPreviewHtml } from '../features/office/office_preview_layout';
 import * as userWorkspace from '../features/user_workspace';
 import { invokeHandlers as localAgentsHandlers } from './local_agents';
+import { invokeHandlers as networkSettingsHandlers } from './network_settings';
 import { invokeHandlers as qualityHandlers } from './quality';
 import {
   invokeHandlers as connectorsHandlers,
@@ -1047,6 +1049,8 @@ async function startupOperation(run: () => unknown | Promise<unknown>) {
 }
 
 const invokeHandlers: Record<string, InvokeHandler> = {
+  'releaseUpdates.check': () => checkReleaseUpdate(),
+  'releaseUpdates.open': () => openReleasePage(),
   'voiceInput.createSession': () => voiceInput.createVoiceSession(),
   'voiceInput.ensureMicrophoneAccess': () => voiceInput.ensureMicrophoneAccess(),
   'appPublishing.prepare': async () => publishApp(),
@@ -3852,6 +3856,7 @@ const invokeHandlers: Record<string, InvokeHandler> = {
   // Local coding CLI agents (Claude Code, Codex, etc.). Kept in the open-source
   // build; the renderer's External Agent picker depends on localAgents.list.
   ...localAgentsHandlers,
+  ...networkSettingsHandlers,
 
   // Quality validator — renderer reads persisted ValidationReports to display
   // why a spec write / marketplace install was rejected.

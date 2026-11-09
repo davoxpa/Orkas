@@ -46,6 +46,7 @@ import { codexBackend } from './backends/codex.js';
 import { openclawBackend } from './backends/openclaw.js';
 import { opencodeBackend } from './backends/opencode.js';
 import { hermesBackend } from './backends/hermes.js';
+import { antigravityBackend } from './backends/antigravity.js';
 import { getLocalCliSupportedFlags } from './runtime_options.js';
 import {
   type LocalActiveRunIngress,
@@ -219,6 +220,7 @@ const BACKENDS: Partial<Record<LocalCliType, LocalBackend>> = {
   openclaw: openclawBackend,
   opencode: opencodeBackend,
   hermes: hermesBackend,
+  antigravity: antigravityBackend,
 };
 
 const MAX_PUBLIC_DIAGNOSTIC_CHARS = 4_096;

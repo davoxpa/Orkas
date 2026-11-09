@@ -13,7 +13,8 @@ try {
   # Fresh installs have nothing to stop. Do not interpret an arbitrary parent
   # directory as an installation and terminate programs in its child folders.
   # Accept either marker so a partially removed old executable can recover.
-  if (-not [IO.File]::Exists([IO.Path]::Combine($directory, 'Orkas.exe')) -and
+  if (-not [IO.File]::Exists([IO.Path]::Combine($directory, 'Talia.exe')) -and
+      -not [IO.File]::Exists([IO.Path]::Combine($directory, 'Orkas.exe')) -and
       -not [IO.File]::Exists([IO.Path]::Combine($directory, 'resources', 'app.asar'))) { exit 0 }
   # A separator boundary protects sibling installations such as Orkas-other.
   $prefix = $directory + '\'

@@ -613,6 +613,11 @@ function baseOptions(cli: LocalCliType): LocalCliRuntimeOptions {
 async function discover(entry: LocalCliEntry, cwd: string, force: boolean, customArgs: readonly string[]): Promise<LocalCliRuntimeOptions> {
   const out = baseOptions(entry.type);
   if (!entry.available || !entry.path) return out;
+  if (entry.type === 'antigravity') {
+    // Nessun probe di modelli o login: mantenere le scelte del runtime ufficiale.
+    out.status = 'partial';
+    return out;
+  }
   if (entry.type === 'claude') {
     const help = await cliHelp(entry, cwd, force);
     const flags = supportedFlags(help);

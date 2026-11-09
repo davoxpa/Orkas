@@ -158,22 +158,20 @@ body.is-sidebar-resizing iframe { pointer-events: none; }
 }
 
 .logo-icon {
-  /* The source artwork has generous safe-area padding. A larger image box
-     plus compensating margins enlarges the visible orca without making the
-     logo strip push the rest of the sidebar downward. */
-  width: 42px;
-  height: 42px;
-  margin: -10px -7px -10px -8px;
+  /* Il simbolo vettoriale conserva la geometria e lo spazio dell'originale approvato. */
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
-  border-radius: 11px;
   -webkit-user-drag: none;
 }
 
 .logo-text {
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: #282a2d;
 }
 
 .sidebar-logo-version {
@@ -14490,6 +14488,17 @@ body.is-task-side-panel-resizing * { cursor: col-resize !important; }
   overflow: hidden;
 }
 .settings-sheet[hidden] { display: none; }
+.settings-network-sheet { padding: 18px; }
+.settings-network-sheet .settings-row-desc { margin: 0 0 14px; }
+.settings-network-sheet > .settings-network-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 0 0;
+  min-height: 0;
+}
+.settings-network-sheet > #settings-network-restart { margin-top: 16px; }
+.settings-network-sheet > #settings-network-result { margin: 12px 0 0; }
 .settings-sheet > .settings-empty { padding: 22px 18px; text-align: center; }
 .settings-note {
   display: flex;

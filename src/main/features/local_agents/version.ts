@@ -33,6 +33,8 @@ export const MIN_VERSIONS: Readonly<Record<LocalCliType, string>> = {
   // ACP protocolVersion=1 and sessionUpdate envelopes observed with Hermes
   // 0.9 are the baseline used by _acp.ts, not a claim about earlier releases.
   hermes: '0.9.0',
+  // Nessun floor Google verificato: la compatibilità ACP viene controllata all'handshake.
+  antigravity: '0.0.0',
 };
 
 /** Anthropic's upstream CHANGELOG.md, 2.1.81: --bare was introduced for

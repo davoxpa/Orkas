@@ -139,6 +139,17 @@ export const LOCAL_CLI_CAPABILITIES = {
     // selector that suggests Orkas can pause and answer a native prompt.
     permissionPolicies: ['full_access'],
   },
+  antigravity: {
+    resume: 'none',
+    instructionChannel: 'user-message',
+    durableInstructionScope: 'invocation',
+    codingProjectDirectory: true,
+    orkasBridge: true,
+    agentMemory: false,
+    activeRunIngress: 'none',
+    progressEvents: true,
+    permissionPolicies: ['inherit'],
+  },
   hermes: {
     resume: 'none',
     instructionChannel: 'user-message',
@@ -219,6 +230,7 @@ const BIN_NAMES: Record<LocalCliType, string> = {
   openclaw: 'openclaw',
   opencode: 'opencode',
   hermes: 'hermes',
+  antigravity: 'agy',
 };
 
 /** Env var to override default binary path per CLI. */
@@ -228,6 +240,7 @@ const ENV_KEYS: Record<LocalCliType, string> = {
   openclaw: 'ORKAS_OPENCLAW_PATH',
   opencode: 'ORKAS_OPENCODE_PATH',
   hermes: 'ORKAS_HERMES_PATH',
+  antigravity: 'ORKAS_ANTIGRAVITY_PATH',
 };
 
 /** Documented version probes for each CLI, in compatibility order. */
@@ -239,6 +252,7 @@ const VERSION_PROBES: Record<LocalCliType, readonly (readonly string[])[]> = {
   // Hermes documents both forms across releases. Prefer the stable
   // subcommand, then tolerate installations that expose only the flag.
   hermes: [['version'], ['--version']],
+  antigravity: [['--version']],
 };
 
 // Version commands are normally quick, but bundled CLIs can take several

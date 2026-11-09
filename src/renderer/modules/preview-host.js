@@ -119,7 +119,7 @@ const _convLog = createLogger('preview-host');
   function applySourceContext(s) {
     currentCid = s.options?.cid || s.cid || null;
     projectScoped = !!s.options?.projectScoped;
-    document.title = s.title || 'Orkas';
+    document.title = s.title || 'Talia';
   }
   async function initialize() {
     await initI18n();

@@ -1,10 +1,14 @@
-# Orkas
+# Talia
+
+![Talia](src/resources/icons/talia-logo.svg)
+
+Talia is a local customization of the open-source [Orkas](https://github.com/Orkas-AI/Orkas) desktop app. See the [project documentation](docs/README.md) for the implemented capabilities and [branding notes](docs/reference/branding.md) for the adopted identity. Talia releases are tracked at [this repository's releases page](https://github.com/davoxpa/Orkas/releases). The Orkas download links below install upstream Orkas and do not include Talia's Antigravity integration.
 
 **An open-source team of AI agents on your desktop — it turns your goals into finished work and keeps it moving.**
 
-Orkas is an open-source (MIT), local-first multi-agent desktop app — an AI assistant that works as a team. Tell the **Commander** what you need: it finishes many tasks on its own, and for bigger work it plans the steps and brings in specialist agents along with the coding and personal agents you already use — **Claude Code, Codex, OpenCode, OpenClaw and Hermes-Agent** — to work on it together.
+Talia is an open-source (MIT), local-first multi-agent desktop app — an AI assistant that works as a team. Tell the **Commander** what you need: it finishes many tasks on its own, and for bigger work it plans the steps and brings in specialist agents along with the coding and personal agents you already use — **Claude Code, Codex, OpenCode, OpenClaw and Hermes-Agent** — to work on it together.
 
-Orkas is built to keep a project moving, not just answer one prompt. A **project** holds the goal, rules, memory and files, so every new conversation picks up where the last one left off. **To-dos** split the work between people and agents, **Auto-advance** lets the team take on the next to-do by itself, and **scheduled automations** repeat routine work hourly, daily, weekly or monthly. All your data stays on your computer, and finished work comes back for your review — so you can trust Orkas with the ongoing work of your business.
+Talia is built to keep a project moving, not just answer one prompt. A **project** holds the goal, rules, memory and files, so every new conversation picks up where the last one left off. **To-dos** split the work between people and agents, **Auto-advance** lets the team take on the next to-do by itself, and **scheduled automations** repeat routine work hourly, daily, weekly or monthly. All your data stays on your computer, and finished work comes back for your review — so you can trust Talia with the ongoing work of your business.
 
 **[⬇ Download Orkas for macOS & Windows](https://orkas.ai/download/?source=gh-orkas&entry_point=github_readme&download=1)** — free, with 500 credits for the built-in Orkas model, so you don't need an API key to start. Prefer your own keys? Claude · OpenAI · Gemini · DeepSeek · Kimi · GLM · Qwen · MiniMax · Doubao, or a local OpenAI-compatible endpoint.
 
@@ -171,11 +175,13 @@ Want a packaged installer instead? See [Download](#download) above. To run from 
 **Requirements**: Node 22.12+ · macOS / Windows 10+ / glibc 2.34+ Linux x64 or arm64. Keep Python 3 and a C/C++ build toolchain available for the uncommon native-module source-build fallback.
 
 ```bash
-git clone https://github.com/Orkas-AI/Orkas.git
+git clone https://github.com/davoxpa/Orkas.git
 cd Orkas
 ./run.sh           # macOS / Linux
 run.cmd            # Windows
 ```
+
+To receive Talia changes on another computer, run this fork's source checkout. The version button in the sidebar checks Talia releases at startup and on click; a newer version links to its release page. It reports availability only and does not install updates. To update a source checkout, close Talia, run `git pull --ff-only` in that checkout, then restart with `./run.sh` or `run.cmd`.
 
 Linux source runs require glibc 2.34+. Alpine and other musl-based distributions are not supported. Local speech transcription downloads and verifies the target-native whisper.cpp runtime and multilingual model during the first source launch.
 

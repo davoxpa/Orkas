@@ -25,6 +25,11 @@
       description_en: 'Understands and maintains project code, answers code questions, develops features, fixes bugs, and reviews changes, providing code changes or analysis and recommendations.',
       isCoding: true,
     },
+    antigravity: {
+      name: 'Antigravity',
+      description_en: 'Uses the official Antigravity CLI and its existing account, model and permission settings. Sign in with agy before use; enterprise network settings must also be available to Orkas.',
+      isCoding: true,
+    },
     hermes: {
       name: 'Hermes',
       description_zh: '完成资料研究、代码开发和需要多个步骤的任务，提供研究结论、代码修改或生成的文件。',

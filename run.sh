@@ -1,5 +1,5 @@
 #!/bin/bash
-# Open-source Orkas launcher. The script's own directory is the checkout root.
+# Open-source Talia launcher. The script's own directory is the checkout root.
 # Behavior: an in-app relaunch waits for its exact owner process to exit. A
 # direct launch closes only the previous source instance owned by this checkout,
 # then starts a new instance in the foreground.
@@ -7,13 +7,13 @@
 # Usage:
 #   ./run.sh
 #
-# Orkas source builds use exactly one server environment: global prod.
+# Talia source builds use exactly one server environment: global prod.
 set -e
 
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ ! -f "$APP_DIR/package.json" ]; then
-  echo "[Orkas] $APP_DIR/package.json not found; check the source directory layout." >&2
+  echo "[Talia] $APP_DIR/package.json not found; check the source directory layout." >&2
   exit 1
 fi
 
@@ -27,31 +27,31 @@ if is_wsl; then
   if command -v cmd.exe >/dev/null 2>&1 && command -v wslpath >/dev/null 2>&1; then
     WIN_APP_DIR="$(wslpath -w "$APP_DIR")"
     cat >&2 <<EOF
-[Orkas] WSL/WSLg detected.
-[Orkas] Launching the Windows-native Orkas via run.cmd so Windows IME works normally.
+[Talia] WSL/WSLg detected.
+[Talia] Launching the Windows-native Talia via run.cmd so Windows IME works normally.
 EOF
     exec cmd.exe /d /s /c "pushd \"$WIN_APP_DIR\" && run.cmd"
   fi
   cat >&2 <<'EOF'
-[Orkas] WSL/WSLg detected, but cmd.exe/wslpath is unavailable.
-[Orkas] On Windows, launch Orkas with run.cmd so Windows IME works normally.
+[Talia] WSL/WSLg detected, but cmd.exe/wslpath is unavailable.
+[Talia] On Windows, launch Talia with run.cmd so Windows IME works normally.
 EOF
   exit 1
 fi
 
-echo "[Orkas] Starting Orkas (global prod)"
+echo "[Talia] Starting Talia (global prod)"
 
 wait_for_relaunch_owner() {
   local owner_pid="${ORKAS_RELAUNCH_OWNER_PID:-}"
   [ -n "$owner_pid" ] || return 0
   case "$owner_pid" in
     *[!0-9]*|'')
-      echo "[Orkas] Invalid relaunch owner PID; refusing to start." >&2
+      echo "[Talia] Invalid relaunch owner PID; refusing to start." >&2
       exit 1
       ;;
   esac
   if [ "$owner_pid" -eq "$$" ]; then
-    echo "[Orkas] Relaunch owner PID resolves to the launcher itself; refusing to start." >&2
+    echo "[Talia] Relaunch owner PID resolves to the launcher itself; refusing to start." >&2
     exit 1
   fi
   local attempt=0
@@ -60,7 +60,7 @@ wait_for_relaunch_owner() {
     attempt=$((attempt + 1))
   done
   if kill -0 "$owner_pid" >/dev/null 2>&1; then
-    echo "[Orkas] Relaunch owner PID $owner_pid did not exit within 15 seconds; refusing to terminate unrelated processes." >&2
+    echo "[Talia] Relaunch owner PID $owner_pid did not exit within 15 seconds; refusing to terminate unrelated processes." >&2
     exit 1
   fi
   unset ORKAS_RELAUNCH_OWNER_PID
@@ -69,7 +69,7 @@ wait_for_relaunch_owner() {
 wait_for_relaunch_owner
 
 if ! command -v node >/dev/null 2>&1; then
-  echo "[Orkas] Node.js 22.12+ is required to bootstrap the source checkout. Install Node.js, then run ./run.sh again." >&2
+  echo "[Talia] Node.js 22.12+ is required to bootstrap the source checkout. Install Node.js, then run ./run.sh again." >&2
   exit 1
 fi
 
@@ -88,7 +88,7 @@ node "$APP_DIR/scripts/prepare-source-protocol.cjs" || true
 cd "$APP_DIR"
 
 if [ "$(uname -s)" = "Darwin" ]; then
-  APP_BUNDLE="$APP_DIR/node_modules/electron/dist/Orkas.app"
+  APP_BUNDLE="$APP_DIR/node_modules/electron/dist/Talia.app"
   if [ -d "$APP_BUNDLE" ]; then
     ARGS=("$APP_DIR")
     # Launch through LaunchServices so the patched app name/icon are used in source runs.

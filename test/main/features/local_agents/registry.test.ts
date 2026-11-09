@@ -28,6 +28,9 @@ import {
 import { configureBootAdmission, noteBootUserActivity, _resetForTests as resetBoot } from '../../../../src/main/util/boot_init';
 import { MIN_VERSIONS } from '../../../../src/main/features/local_agents/version';
 import * as versionProbe from '../../../../src/main/features/local_agents/version';
+import * as cliLookup from '../../../../src/main/features/local_agents/which';
+
+const originalWhichBins = cliLookup.whichBins;
 
 const isWindows = process.platform === 'win32';
 const TEST_NODE = process.env.ORKAS_TEST_NODE || process.execPath;
@@ -79,6 +82,17 @@ describe('local CLI context capabilities', () => {
         activeRunIngress: 'none',
         progressEvents: true,
         permissionPolicies: ['full_access'],
+      },
+      antigravity: {
+        resume: 'none',
+        instructionChannel: 'user-message',
+        durableInstructionScope: 'invocation',
+        codingProjectDirectory: true,
+        orkasBridge: true,
+        agentMemory: false,
+        activeRunIngress: 'none',
+        progressEvents: true,
+        permissionPolicies: ['inherit'],
       },
       hermes: {
         resume: 'none',
@@ -329,6 +343,7 @@ describe('local_agents/registry', () => {
     'ORKAS_OPENCLAW_PATH',
     'ORKAS_OPENCODE_PATH',
     'ORKAS_HERMES_PATH',
+    'ORKAS_ANTIGRAVITY_PATH',
     'APPDATA',
     'LOCALAPPDATA',
     'VOLTA_HOME',
@@ -356,6 +371,12 @@ describe('local_agents/registry', () => {
     }
     process.env.APPDATA = path.join(process.env.HOME, 'AppData', 'Roaming');
     process.env.LOCALAPPDATA = path.join(process.env.HOME, 'AppData', 'Local');
+    // I binari reali dell'host non devono alterare le fixture del registro.
+    const isolatedLookup = (name: string, options?: { extraDirs?: string[] }) => originalWhichBins(name, {
+      extraDirs: options?.extraDirs?.filter(dir => dir.startsWith(tmpDir + path.sep)),
+    });
+    vi.spyOn(cliLookup, 'whichBins').mockImplementation(isolatedLookup);
+    vi.spyOn(cliLookup, 'whichBin').mockImplementation(async (name, options) => (await isolatedLookup(name, options))[0] ?? null);
     invalidateCache();
   });
 
@@ -419,7 +440,7 @@ describe('local_agents/registry', () => {
     const dirs = Array.from({ length: 30 }, (_, index) => path.join(tmpDir, 'path-' + index));
     dirs.forEach(dir => fs.mkdirSync(dir));
     const probeLog = path.join(tmpDir, 'unexpected-presence-process.log');
-    const installed = LOCAL_CLI_TYPES.map(type => writeCountingMockCli(path.join(dirs[29], type), probeLog, '999.0.0'));
+    const installed = LOCAL_CLI_TYPES.map(type => writeCountingMockCli(path.join(dirs[29], type === 'antigravity' ? 'agy' : type), probeLog, '999.0.0'));
     process.env.PATH = dirs.join(path.delimiter);
     const samples: number[] = [];
     for (let round = 0; round < 10; round += 1) {
@@ -689,8 +710,7 @@ describe('local_agents/registry', () => {
 
   it('coalesces concurrent forced discovery into one set of version processes', async () => {
     const probeLog = path.join(tmpDir, 'probe-calls.log');
-    // The scheduling fixture represents all five CLIs, including OpenClaw's
-    // calendar-version floor; the availability oracle must use a valid version.
+    // La fixture comprende tutte le CLI, incluso il floor calendario di OpenClaw.
     const fake = writeCountingMockCli(path.join(tmpDir, 'counting-cli'), probeLog, '2026.4.11');
     process.env.PATH = '';
     process.env.ORKAS_CLAUDE_PATH = fake;
@@ -698,6 +718,7 @@ describe('local_agents/registry', () => {
     process.env.ORKAS_OPENCLAW_PATH = fake;
     process.env.ORKAS_OPENCODE_PATH = fake;
     process.env.ORKAS_HERMES_PATH = fake;
+    process.env.ORKAS_ANTIGRAVITY_PATH = fake;
 
     const [first, second] = await Promise.all([
       detectAll({ force: true }),
@@ -707,8 +728,9 @@ describe('local_agents/registry', () => {
     expect(second).toBe(first);
     expect(first.filter(e => !e.available).map(e => ({ type: e.type, error: e.error, path: e.path }))).toEqual([]);
     const probes = fs.readFileSync(probeLog, 'utf8').trim().split(/\r?\n/).sort();
-    // Four single-probe CLIs plus Hermes `version` and `--version`.
+    // Cinque CLI a probe singolo più Hermes con version e --version.
     expect(probes).toEqual([
+      '--version',
       '--version',
       '--version',
       '--version',

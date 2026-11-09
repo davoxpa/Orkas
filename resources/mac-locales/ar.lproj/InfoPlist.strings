@@ -1,3 +1,3 @@
-"NSMicrophoneUsageDescription" = "يستخدم Orkas الميكروفون للإدخال الصوتي والمواقع التي تسمح لها.";
-"NSCameraUsageDescription" = "يسمح Orkas للمواقع باستخدام الكاميرا بإذنك.";
-"NSBluetoothAlwaysUsageDescription" = "يستخدم Orkas البلوتوث للتأكد من أن الهاتف الذي يحفظ مفتاح المرور قريب منك.";
+"NSMicrophoneUsageDescription" = "يستخدم Talia الميكروفون للإدخال الصوتي والمواقع التي تسمح لها.";
+"NSCameraUsageDescription" = "يسمح Talia للمواقع باستخدام الكاميرا بإذنك.";
+"NSBluetoothAlwaysUsageDescription" = "يستخدم Talia البلوتوث للتأكد من أن الهاتف الذي يحفظ مفتاح المرور قريب منك.";

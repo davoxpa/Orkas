@@ -699,7 +699,7 @@
       card.setAttribute('role', 'button');
       card.tabIndex = 0;
       card.setAttribute('aria-label', `${title} · ${a.local === false
-        ? _t('apps.publish_visit', 'Visit online') : _t('apps.open_hint', 'Open in Orkas')}`);
+        ? _t('apps.publish_visit', 'Visit online') : _t('apps.open_hint', 'Open in Talia')}`);
 
       // Identity-based decoration stays stable across renames and sorting.
       const tones = ['violet', 'blue', 'green', 'amber', 'rose'];

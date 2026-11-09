@@ -7,15 +7,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Orkas</title>
+  <title>Talia</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <img class="logo-icon" src="../resources/icons/logo.png" alt="" draggable="false" />
-        <div class="logo-text">Orkas</div>
+        <img class="logo-icon" src="../resources/icons/talia-symbol.svg" alt="" draggable="false" />
+        <div class="logo-text">Talia</div>
         <button class="sidebar-logo-version" id="sidebar-version" type="button"></button>
       </div>
       <button class="sidebar-search-btn" id="sidebar-search-btn" data-i18n-title="sidebar.search_title" title="Global search (Cmd/Ctrl+K)">
@@ -153,8 +153,8 @@
                 <p class="home-path-note" data-i18n="new_chat.home.goal_example">For example: research 3 similar products, compare their features and pricing, and turn the findings into a presentation.</p>
               </section>
               <section class="home-path" aria-labelledby="home-explore-title">
-                <h2 class="home-path-title" id="home-explore-title" data-i18n="new_chat.home.explore_title">Not sure yet? Let Orkas get to know you first.</h2>
-                <p class="home-path-body" data-i18n="new_chat.home.explore_body">Talk about your work, your business, or what's on your mind, and Orkas will help you find the right goals and keep them moving.</p>
+                <h2 class="home-path-title" id="home-explore-title" data-i18n="new_chat.home.explore_title">Not sure yet? Let Talia get to know you first.</h2>
+                <p class="home-path-body" data-i18n="new_chat.home.explore_body">Talk about your work, your business, or what's on your mind, and Talia will help you find the right goals and keep them moving.</p>
                 <p class="home-path-note" id="home-explore-context"></p>
               </section>
             </div>
@@ -1121,6 +1121,7 @@
               <button class="settings-tab is-active" type="button" role="tab" aria-selected="true" data-settings-tab="data"><span data-ui-icon="database" data-ui-icon-class="settings-tab-icon"></span><span class="settings-tab-label" data-i18n="settings.tab.data">数据</span></button>
               <button class="settings-tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-settings-tab="credentials"><span data-ui-icon="sparkles" data-ui-icon-class="settings-tab-icon"></span><span class="settings-tab-label" data-i18n="settings.tab.credentials">Models</span></button>
               <button class="settings-tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-settings-tab="general"><span data-ui-icon="settings" data-ui-icon-class="settings-tab-icon"></span><span class="settings-tab-label" data-i18n="settings.tab.general">通用</span></button>
+              <button class="settings-tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-settings-tab="network"><span class="settings-tab-label" data-i18n="settings.network.title">Network</span></button>
             </div>
           </div>
 
@@ -1191,6 +1192,54 @@
             </div>
 
             <!-- ───────────────────────── 通用 ───────────────────────── -->
+            <div class="settings-tab-pane" data-settings-pane="network" hidden>
+              <div class="settings-page" id="settings-network">
+                <header class="settings-page-head">
+                  <h2 data-i18n="settings.network.title">Network</h2>
+                  <p data-i18n="settings.network.description">Proxy settings apply to this computer only. Save and restart Talia to apply them to the app and newly launched external agents.</p>
+                </header>
+                <section class="settings-section">
+                  <div class="settings-sheet settings-network-sheet">
+                    <div class="settings-row settings-form-row">
+                      <label for="settings-network-mode" data-i18n="settings.network.mode">Connection mode</label>
+                      <select class="form-input" id="settings-network-mode">
+                        <option value="automatic" data-i18n="settings.network.automatic">Automatic (launch environment and system proxy)</option>
+                        <option value="direct" data-i18n="settings.network.direct">Direct connection</option>
+                        <option value="manual" data-i18n="settings.network.manual">Manual proxy</option>
+                      </select>
+                    </div>
+                    <div id="settings-network-manual" hidden>
+                      <div class="settings-row settings-form-row">
+                        <label for="settings-network-http">HTTP proxy</label>
+                        <input class="form-input" type="url" id="settings-network-http" placeholder="http://127.0.0.1:9000" autocomplete="off" spellcheck="false" maxlength="2048" aria-describedby="settings-network-proxy-hint" />
+                      </div>
+                      <div class="settings-row settings-form-row">
+                        <label for="settings-network-https">HTTPS proxy</label>
+                        <input class="form-input" type="url" id="settings-network-https" placeholder="http://127.0.0.1:9000" autocomplete="off" spellcheck="false" maxlength="2048" aria-describedby="settings-network-proxy-hint" />
+                      </div>
+                      <p class="settings-row-desc" id="settings-network-proxy-hint" data-i18n="settings.network.proxy_hint">HTTP/HTTPS URLs without embedded credentials. An empty HTTPS field uses the HTTP proxy.</p>
+                      <div class="settings-row settings-form-row">
+                        <label for="settings-network-bypass" data-i18n="settings.network.bypass">Proxy exclusions (NO_PROXY)</label>
+                        <input class="form-input" type="text" id="settings-network-bypass" placeholder="localhost,127.0.0.1,::1,.example.com" autocomplete="off" spellcheck="false" maxlength="4096" aria-describedby="settings-network-bypass-hint" />
+                      </div>
+                      <p class="settings-row-desc" id="settings-network-bypass-hint" data-i18n="settings.network.bypass_hint">Separate hosts with commas. Local loopback addresses always bypass the proxy. Use * only to bypass the proxy for every host.</p>
+                    </div>
+                    <div class="settings-row settings-form-row">
+                      <label for="settings-network-target" data-i18n="settings.network.target">Connection test</label>
+                      <select class="form-input" id="settings-network-target"><option value="google">Google / Antigravity</option><option value="openai">OpenAI</option></select>
+                    </div>
+                    <p class="settings-row-desc" data-i18n="settings.network.test_hint">Tests the entered values without saving, credentials or model calls. A network response does not validate your account or licence.</p>
+                    <div class="settings-row settings-network-actions">
+                      <button class="btn btn-primary" type="button" id="settings-network-save" data-i18n="settings.network.save">Save network settings</button>
+                      <button class="btn" type="button" id="settings-network-test" data-i18n="settings.network.test">Test connection</button>
+                    </div>
+                    <p class="settings-row-desc" id="settings-network-restart" data-i18n="settings.network.restart" hidden>Settings saved. Quit and reopen Talia to apply them. Current tasks keep their existing connection.</p>
+                    <p class="form-msg" id="settings-network-result" role="status" aria-live="polite"></p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
             <div class="settings-tab-pane" data-settings-pane="general" hidden>
               <div class="settings-page">
                 <header class="settings-page-head">
@@ -1206,7 +1255,7 @@
                     <div class="settings-row" id="settings-language-row">
                       <div class="settings-row-copy">
                         <div class="settings-row-title" data-i18n="settings.language.title">语言 / Language</div>
-                        <div class="settings-row-desc" data-i18n="settings.language.sub">设置 Orkas 的界面语言</div>
+                        <div class="settings-row-desc" data-i18n="settings.language.sub">设置 Talia 的界面语言</div>
                       </div>
                       <div class="ai-select settings-row-select" id="settings-language-select"></div>
                     </div>
@@ -1224,14 +1273,14 @@
                     <div class="settings-row">
                       <div class="settings-row-copy">
                         <div class="settings-row-title" id="settings-task-notifications-title" data-i18n="settings.task_notifications.title">任务通知</div>
-                        <div class="settings-row-desc" data-i18n="settings.task_notifications.sub">当 Orkas 不在前台时，在任务完成、失败或需要你操作时发送系统通知。</div>
+                        <div class="settings-row-desc" data-i18n="settings.task_notifications.sub">当 Talia 不在前台时，在任务完成、失败或需要你操作时发送系统通知。</div>
                       </div>
                       <label class="toggle-switch settings-switch">
                         <input type="checkbox" id="settings-task-notifications-toggle" checked aria-labelledby="settings-task-notifications-title" />
                       </label>
                     </div>
                     <div class="settings-row settings-task-notification-permission" id="settings-task-notification-permission" role="status" aria-live="polite" hidden>
-                      <span class="settings-task-notification-permission-text" id="settings-task-notification-permission-text" data-i18n="settings.task_notifications.permission_disabled">系统已关闭 Orkas 的通知权限。请前往系统设置开启，否则无法收到任务进度提醒。</span>
+                      <span class="settings-task-notification-permission-text" id="settings-task-notification-permission-text" data-i18n="settings.task_notifications.permission_disabled">系统已关闭 Talia 的通知权限。请前往系统设置开启，否则无法收到任务进度提醒。</span>
                       <button type="button" class="btn btn-sm" id="settings-task-notification-open-settings" data-i18n="settings.task_notifications.open_settings">打开系统设置</button>
                     </div>
                     <div class="settings-row">

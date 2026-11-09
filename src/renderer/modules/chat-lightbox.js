@@ -541,7 +541,7 @@ function openChatImageLightbox(src, alt, opts) {
   _lightboxImg.alt = alt || '';
   const title = el.querySelector('.chat-lightbox-title');
   if (title) title.textContent = alt || '';
-  if (window.OrkasPreviewHost) document.title = alt || 'Orkas';
+  if (window.OrkasPreviewHost) document.title = alt || 'Talia';
   _setLightboxLoading(true);
   _releaseLightboxImage(_lightboxImg);
   const settle = () => {
